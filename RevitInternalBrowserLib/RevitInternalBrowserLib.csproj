@@ -1,0 +1,129 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <LangVersion>10</LangVersion>
+    <AssemblyName>RevitInternalBrowserLib</AssemblyName>
+    <RootNamespace>RevitInternalBrowserLib</RootNamespace>
+    <Configurations>Debug None Auth 2024;Release None Auth 2024;Debug None Auth 2026;Release None Auth 2026</Configurations>
+    <Platforms>x64</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <!-- Configuration Mode and Auth Mode extraction -->
+  <PropertyGroup>
+    <ConfigMode Condition="$(Configuration.Contains('Debug'))">Debug</ConfigMode>
+    <ConfigMode Condition="$(Configuration.Contains('Release'))">Release</ConfigMode>
+    <AuthMode Condition="$(Configuration.Contains('None Auth'))">None Auth</AuthMode>
+    <RevitVersion Condition="$(Configuration.Contains('2024'))">2024</RevitVersion>
+    <RevitVersion Condition="$(Configuration.Contains('2026'))">2026</RevitVersion>
+    <!-- Default to 2024 if no version specified -->
+    <RevitVersion Condition="'$(RevitVersion)' == ''">2024</RevitVersion>
+  </PropertyGroup>
+
+  <!-- Target Framework based on Revit Version -->
+  <PropertyGroup Condition="'$(RevitVersion)' == '2024'">
+    <TargetFramework>net48</TargetFramework>
+    <DefineConstants>REVIT2024</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(RevitVersion)' == '2026'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <DefineConstants>REVIT2026</DefineConstants>
+  </PropertyGroup>
+  
+  <!-- Default to 2024 if no version specified -->
+  <PropertyGroup Condition="'$(RevitVersion)' == ''">
+    <TargetFramework>net48</TargetFramework>
+    <DefineConstants>REVIT2024</DefineConstants>
+  </PropertyGroup>
+  
+  <!-- Ensure x64 platform for all configurations -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug None Auth 2024' ">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release None Auth 2024' ">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug None Auth 2026' ">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release None Auth 2026' ">
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(RevitVersion)' == '2024'">
+    <PackageReference Include="CefSharp.Wpf" Version="105.3.390" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\chrome-icon-16.png" />
+    <EmbeddedResource Include="Resources\chrome-icon-16.png" />
+    <None Remove="Resources\close-tab-icon.png" />
+    <EmbeddedResource Include="Resources\close-tab-icon.png" />
+    <None Remove="Resources\forward-icon.png" />
+    <EmbeddedResource Include="Resources\forward-icon.png" />
+    <None Remove="Resources\new-tab-icon.png" />
+    <EmbeddedResource Include="Resources\new-tab-icon.png" />
+    <None Remove="Resources\refresh-icon.png" />
+    <EmbeddedResource Include="Resources\refresh-icon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\back-icon.png" />
+    <EmbeddedResource Include="Resources\back-icon.png" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RevitVersion)' == '2026'">
+    <PackageReference Include="CefSharp.Common.NETCore" Version="138.0.170" />
+    <PackageReference Include="CefSharp.Wpf.NETCore" Version="138.0.170" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- Debug output for conditional compilation -->
+  <Target Name="DebugConditionalCompilation" BeforeTargets="Build">
+    <Message Text="RevitVersion: $(RevitVersion)" Importance="high" />
+    <Message Text="DefineConstants: $(DefineConstants)" Importance="high" />
+    <Message Text="TargetFramework: $(TargetFramework)" Importance="high" />
+  </Target>
+
+  <!-- Copy CefSharp dependencies to output directory -->
+  <Target Name="CopyCefSharpDependencies" AfterTargets="Build">
+    <ItemGroup Condition="'$(RevitVersion)' == '2024'">
+      <!-- Copy x64 CefSharp dependencies from NuGet packages - be very specific about paths -->
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\*.dll" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\*.pak" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\*.dat" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\*.bin" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\*.json" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\*.exe" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\CefSharp\x64\locales\*.pak" />
+      <!-- Copy managed assemblies for .NET Framework 4.8 -->
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\105.3.390\lib\net48\*.dll" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(RevitVersion)' == '2026'">
+      <!-- Copy x64 CefSharp dependencies from NuGet packages for .NET Core - be very specific about paths -->
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\*.dll" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\*.pak" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\*.dat" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\*.bin" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\*.json" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\*.exe" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\runtimes\win-x64\native\locales\*.pak" />
+      <!-- Copy managed assemblies for .NET 8.0 -->
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common.netcore\138.0.170\lib\net8.0-windows\*.dll" />
+      <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.wpf.netcore\138.0.170\lib\net8.0-windows\*.dll" />
+    </ItemGroup>
+    
+    <Copy SourceFiles="@(CefSharpFiles)" 
+          DestinationFolder="$(TargetDir)" 
+          SkipUnchangedFiles="true" />
+          
+    <Message Text="? Copied browser dependencies to Lib output directory for $(TargetFramework)" Importance="high" />
+  </Target>
+
+</Project>

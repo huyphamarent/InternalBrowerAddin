@@ -1,0 +1,253 @@
+<Window x:Class="RevitInternalBrowserLib.BrowserWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:cef="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
+        Title="Revit Internal Browser" 
+        Height="800" 
+        Width="1200"
+        WindowStartupLocation="CenterScreen"
+        >
+    
+    <Window.Resources>
+        <!-- Loading Progress Bar Style -->
+        <Style x:Key="LoadingProgressBarStyle" TargetType="ProgressBar">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Border Background="Transparent" 
+                                CornerRadius="6"
+                                BorderBrush="#4285F4" 
+                                BorderThickness="1">
+                            <Border x:Name="PART_Indicator" 
+                                   Background="#4285F4" 
+                                   CornerRadius="5"
+                                   HorizontalAlignment="Left">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="Transform"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsIndeterminate" Value="True">
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation 
+                                                Storyboard.TargetName="Transform"
+                                                Storyboard.TargetProperty="X"
+                                                From="-12" To="12" Duration="0:0:1"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Tab Button Style -->
+        <Style x:Key="TabButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#F1F3F4"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Margin" Value="0,0,1,0"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="200"/>
+            <Setter Property="MaxWidth" Value="240"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="#E0E0E0" 
+                                BorderThickness="0,0,1,0"
+                                CornerRadius="8,8,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Favicon placeholder or Loading indicator -->
+                                <Grid Grid.Column="0" Margin="2,0,4,0">
+                                    <Ellipse x:Name="Favicon" Width="12" Height="12" Fill="#9AA0A6"/>
+                                    <ProgressBar x:Name="LoadingIndicator" 
+                                                Width="12" Height="12" 
+                                                IsIndeterminate="True" 
+                                                Visibility="Collapsed"
+                                                Style="{StaticResource LoadingProgressBarStyle}"/>
+                                </Grid>
+                                
+                                <!-- Tab title -->
+                                <TextBlock Grid.Column="1" 
+                                          Text="{TemplateBinding Content}" 
+                                          TextTrimming="CharacterEllipsis"
+                                          VerticalAlignment="Center"
+                                          FontSize="12"
+                                          Foreground="#3C4043"/>
+                                
+                                <!-- Close button -->
+                                <Button Grid.Column="2" 
+                                       Width="16" Height="16"
+                                       Background="Transparent"
+                                       BorderThickness="0"
+                                       Content="&#xD7;"
+                                       FontSize="12"
+                                       Foreground="#5F6368"
+                                       Click="CloseTab_Click"
+                                       Tag="{TemplateBinding Tag}"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#E8EAED"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                <Setter TargetName="Favicon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="LoadingIndicator" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Navigation Button Style -->
+        <Style x:Key="NavButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="16">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#F1F3F4"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="#E8EAED"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Tab Bar -->
+        <Grid Grid.Row="0" Background="#FFFFFF" Height="36">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Tab Container -->
+            <ScrollViewer Grid.Column="0" 
+                         HorizontalScrollBarVisibility="Auto" 
+                         VerticalScrollBarVisibility="Hidden"
+                         Height="36">
+                <StackPanel x:Name="TabContainer" 
+                           Orientation="Horizontal"
+                           Height="36"/>
+            </ScrollViewer>
+            
+            <!-- New Tab Button -->
+            <Button Grid.Column="1" 
+                   Style="{StaticResource NavButtonStyle}"
+                   Content="+"
+                   FontSize="16"
+                   FontWeight="Bold"
+                   Foreground="#5F6368"
+                   Click="NewTab_Click"
+                   ToolTip="Open new tab"/>
+        </Grid>
+
+        <!-- Navigation Bar -->
+        <Grid Grid.Row="1" Background="#FFFFFF" Height="48" Margin="8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Back Button -->
+            <Button Grid.Column="0" 
+                   x:Name="BackButton"
+                   Style="{StaticResource NavButtonStyle}"
+                   Content="&#x25C0;"
+                   FontSize="12"
+                   Foreground="#5F6368"
+                   Click="Back_Click"
+                   ToolTip="Go back"
+                   IsEnabled="False"/>
+
+            <!-- Forward Button -->
+            <Button Grid.Column="1" 
+                   x:Name="ForwardButton"
+                   Style="{StaticResource NavButtonStyle}"
+                   Content="&#x25B6;"
+                   FontSize="12"
+                   Foreground="#5F6368"
+                   Click="Forward_Click"
+                   ToolTip="Go forward"
+                   IsEnabled="False"/>
+
+            <!-- Refresh Button -->
+            <Button Grid.Column="2" 
+                   x:Name="RefreshButton"
+                   Style="{StaticResource NavButtonStyle}"
+                   Content="&#x21BB;"
+                   FontSize="14"
+                   Foreground="#5F6368"
+                   Click="Refresh_Click"
+                   ToolTip="Refresh"/>
+
+            <!-- Address Bar -->
+            <Border Grid.Column="3" 
+                   Background="#F1F3F4" 
+                   CornerRadius="20"
+                   Margin="8,0">
+                <TextBox x:Name="AddressBar"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="16,8"
+                        FontSize="14"
+                        VerticalAlignment="Center"
+                        KeyDown="AddressBar_KeyDown"
+                        PreviewMouseLeftButtonDown="AddressBar_PreviewMouseLeftButtonDown"
+                        Text="https://www.google.com"/>
+            </Border>
+
+            <!-- Menu Button -->
+            <Button Grid.Column="4" 
+                   Style="{StaticResource NavButtonStyle}"
+                   Content="&#x22EE;"
+                   FontSize="16"
+                   Foreground="#5F6368"
+                   Click="Menu_Click"
+                   ToolTip="Menu"/>
+        </Grid>
+
+        <!-- Browser Content Area -->
+        <Grid Grid.Row="2" x:Name="BrowserContainer" Focusable="True">
+            <!-- Browser tabs will be added here dynamically -->
+        </Grid>
+    </Grid>
+</Window> 

@@ -1,0 +1,159 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+        <LangVersion>10</LangVersion>
+        <Configurations>Debug None Auth 2024;Release None Auth 2024;Debug None Auth 2026;Release None Auth 2026</Configurations>
+        <Platforms>x64</Platforms>
+        <AssemblyName>RevitInternalBrowser</AssemblyName>
+        <RootNamespace>RevitInternalBrowser</RootNamespace>
+    </PropertyGroup>
+
+    <!-- Configuration Mode and Auth Mode extraction - MUST BE FIRST -->
+    <PropertyGroup>
+        <ConfigMode Condition="$(Configuration.Contains('Debug'))">Debug</ConfigMode>
+        <ConfigMode Condition="$(Configuration.Contains('Release'))">Release</ConfigMode>
+        <AuthMode Condition="$(Configuration.Contains('None Auth'))">None Auth</AuthMode>
+        <RevitVersion Condition="$(Configuration.Contains('2024'))">2024</RevitVersion>
+        <RevitVersion Condition="$(Configuration.Contains('2026'))">2026</RevitVersion>
+        <!-- Default to 2024 if no version specified -->
+        <RevitVersion Condition="'$(RevitVersion)' == ''">2024</RevitVersion>
+    </PropertyGroup>
+
+    <!-- Target Framework based on Revit Version -->
+    <PropertyGroup Condition="'$(RevitVersion)' == '2024'">
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(RevitVersion)' == '2026'">
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <NoWarn>NU1701</NoWarn>
+    </PropertyGroup>
+    
+    <!-- Default to 2024 if no version specified -->
+    <PropertyGroup Condition="'$(RevitVersion)' == ''">
+        <TargetFramework>net48</TargetFramework>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <OutputPath>bin\$(ConfigMode)\$(AuthMode)\$(RevitVersion)\</OutputPath>
+        <Authors>RevitInternalBrowser</Authors>
+        <Nullable>enable</Nullable>
+        <PlatformTarget>x64</PlatformTarget>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(ConfigMode)' == 'Debug' ">
+        <DebugType>full</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+        <DefineConstants>DEBUG;TRACE;REVIT$(RevitVersion)</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(ConfigMode)' == 'Release' ">
+        <DebugType>pdbonly</DebugType>
+        <DefineConstants>TRACE;REVIT$(RevitVersion)</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(RevitVersion)' == '2024'">
+        <!-- Revit API References for 2024 -->
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2024.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2024.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.AdWindows" Version="2024.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.UIFrameworkServices" Version="2024.*"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(RevitVersion)' == '2026'">
+        <!-- Revit API References for 2026 -->
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2026.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.AdWindows" Version="2026.*"/>
+        <PackageReference Include="Nice3point.Revit.Api.UIFrameworkServices" Version="2026.*"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Addin manifest file -->
+        <None Include="RevitInternalBrowser.addin">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Embedded resources for icons -->
+        <Resource Include="Resources\chrome-icon-16.png" />
+        <Resource Include="Resources\chrome-icon-32.png" />
+        <None Remove="Resources\chrome-icon-64.png" />
+        <Resource Include="Resources\chrome-icon-64.png" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(RevitVersion)' == '2024'">
+        <!-- CefSharp for browser functionality - .NET Framework 4.8 -->
+        <PackageReference Include="CefSharp.Wpf" Version="138.0.170" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(RevitVersion)' == '2026'">
+        <!-- No browser component for Revit 2026 - using different approach -->
+        <!-- <PackageReference Include="CefSharp.Wpf" Version="138.0.170" /> -->
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\RevitInternalBrowserLib\RevitInternalBrowserLib.csproj" />
+    </ItemGroup>
+
+
+    <!-- Copy CefSharp dependencies to output directory -->
+    <Target Name="CopyCefSharpDependencies" AfterTargets="Build">
+        <ItemGroup Condition="'$(RevitVersion)' == '2024'">
+            <!-- Copy x64 CefSharp dependencies from NuGet packages - be very specific about paths -->
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\*.dll" />
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\*.pak" />
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\*.dat" />
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\*.bin" />
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\*.json" />
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\*.exe" />
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\CefSharp\x64\locales\*.pak" />
+            <!-- Copy managed assemblies for .NET Framework 4.8 -->
+            <CefSharpFiles Include="$(NuGetPackageRoot)cefsharp.common\138.0.170\lib\net48\*.dll" />
+        </ItemGroup>
+        
+        <ItemGroup Condition="'$(RevitVersion)' == '2026'">
+            <!-- WebView2 doesn't need additional dependencies - they're included in the package -->
+            <Message Text="? WebView2 dependencies are included in the package for $(TargetFramework)" Importance="high" />
+        </ItemGroup>
+
+        <Copy SourceFiles="@(CefSharpFiles)"
+              DestinationFolder="$(TargetDir)"
+              SkipUnchangedFiles="true" />
+
+        <Message Text="? Copied browser dependencies to output directory for $(TargetFramework)" Importance="high" />
+    </Target>
+
+    <!-- Copy only the .addin file to Revit add-ins folder -->
+    <Target Name="PublishAddIn" AfterTargets="Build" Condition="'$(OS)' == 'Windows_NT'">
+        <PropertyGroup>
+            <RevitAddinsPath>$(ProgramData)\Autodesk\Revit\Addins\$(RevitVersion)</RevitAddinsPath>
+        </PropertyGroup>
+        
+        <Message Text="? Registering add-in with Revit $(RevitVersion)..." Importance="high" />
+        <Message Text="? Target directory: $(RevitAddinsPath)" Importance="high" />
+        
+        <!-- Create destination directory if it doesn't exist -->
+        <MakeDir Directories="$(RevitAddinsPath)" ContinueOnError="true" />
+        
+        <!-- Define paths -->
+        <PropertyGroup>
+            <AddinFilePath>$(TargetDir)RevitInternalBrowser.addin</AddinFilePath>
+            <RevitAddinAssemblyPath>$(TargetDir)RevitInternalBrowser.dll</RevitAddinAssemblyPath>
+        </PropertyGroup>
+        
+        <!-- Update addin file to point to full path of assembly in output build directory -->
+        <Exec Command="powershell -Command &quot;(Get-Content '$(AddinFilePath)') -replace '&lt;Assembly&gt;RevitInternalBrowser\.dll&lt;/Assembly&gt;', '&lt;Assembly&gt;$(RevitAddinAssemblyPath)&lt;/Assembly&gt;' | Set-Content '$(AddinFilePath)'&quot;" ContinueOnError="true" />
+        
+        <!-- Copy only the .addin file to Revit addins directory -->
+        <Message Text="? Copying .addin file to Revit addins directory..." Importance="high" />
+        <Copy SourceFiles="$(AddinFilePath)" DestinationFolder="$(RevitAddinsPath)" ContinueOnError="true" />
+        
+        <Message Text="? Add-in registered successfully with Revit $(RevitVersion)!" Importance="high" />
+        <Message Text="? Only .addin file copied to Revit addins directory" Importance="high" />
+        <Message Text="? Assembly path in .addin file: $(RevitAddinAssemblyPath)" Importance="high" />
+        <Message Text="? Location: $(RevitAddinsPath)" Importance="high" />
+    </Target>
+</Project> 

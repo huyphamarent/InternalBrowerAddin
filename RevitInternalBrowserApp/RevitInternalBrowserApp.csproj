@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <Configurations>Debug None Auth 2024;Release None Auth 2024;Debug None Auth 2026;Release None Auth 2026</Configurations>
+    <PlatformTarget>x64</PlatformTarget>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <!-- Configuration Mode and Auth Mode extraction -->
+  <PropertyGroup>
+    <ConfigMode Condition="$(Configuration.Contains('Debug'))">Debug</ConfigMode>
+    <ConfigMode Condition="$(Configuration.Contains('Release'))">Release</ConfigMode>
+    <AuthMode Condition="$(Configuration.Contains('None Auth'))">None Auth</AuthMode>
+    <RevitVersion Condition="$(Configuration.Contains('2024'))">2024</RevitVersion>
+    <RevitVersion Condition="$(Configuration.Contains('2026'))">2026</RevitVersion>
+    <!-- Default to 2024 if no version specified -->
+    <RevitVersion Condition="'$(RevitVersion)' == ''">2024</RevitVersion>
+  </PropertyGroup>
+
+  <!-- Target Framework based on Revit Version -->
+  <PropertyGroup Condition="'$(RevitVersion)' == '2024'">
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(RevitVersion)' == '2026'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <NoWarn>NU1701</NoWarn>
+  </PropertyGroup>
+  
+  <!-- Default to 2024 if no version specified -->
+  <PropertyGroup Condition="'$(RevitVersion)' == ''">
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RevitInternalBrowserLib\RevitInternalBrowserLib.csproj" />
+  </ItemGroup>
+
+</Project>

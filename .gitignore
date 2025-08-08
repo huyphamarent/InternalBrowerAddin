@@ -1,0 +1,40 @@
+### IDE settings
+.idea/
+.vscode/
+.vs/
+
+### Build outputs (all projects)
+[Bb]in/
+[Oo]bj/
+x64/
+x86/
+[Aa]rtifacts/
+[Tt]est[Rr]esults/
+[Rr]elease/
+[Rr]eleases/
+[Dd]ebug/
+
+### Rider/ReSharper
+_ReSharper*/
+*.DotSettings.user
+
+### User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+### NuGet
+packages/
+*.nupkg
+*.snupkg
+
+### Logs
+*.log
+
+### OS files
+[Dd]esktop.ini
+[Tt]humbs.db
+
+### Local history
+.history/

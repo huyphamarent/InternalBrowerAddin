@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Revit Internal Browser</Name>
+    <Assembly>RevitInternalBrowser.dll</Assembly>
+    <AddInId>12345678-1234-1234-1234-123456789012</AddInId>
+    <FullClassName>RevitInternalBrowser.Application</FullClassName>
+    <VendorId>RIBS</VendorId>
+    <VendorDescription>Revit Internal Browser System</VendorDescription>
+  </AddIn>
+</RevitAddIns>
+

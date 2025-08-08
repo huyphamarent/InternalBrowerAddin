@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebView2 Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>? WebView2 Test Page</h1>
+        <p class="success">If you can see this page, WebView2 is working correctly!</p>
+        <p>This is a simple test page to verify that the browser component is functioning properly.</p>
+        <p>Current time: <span id="time"></span></p>
+        <p>User Agent: <span id="useragent"></span></p>
+    </div>
+    
+    <script>
+        document.getElementById('time').textContent = new Date().toLocaleString();
+        document.getElementById('useragent').textContent = navigator.userAgent;
+    </script>
+</body>
+</html> 
